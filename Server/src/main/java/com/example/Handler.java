@@ -18,6 +18,7 @@ public class Handler extends SimpleChannelInboundHandler <String>{
         System.out.println("Client connected" + ctx);
         channel.add(ctx.channel());
         clientName = "Client # " + count;
+        broadcastMsg("SERVER", "connected new client " + clientName);
     }
 
 
@@ -25,16 +26,32 @@ public class Handler extends SimpleChannelInboundHandler <String>{
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String s) throws Exception {
         System.out.println("Got message : " + s);
-        String out = String.format("[%s]: %s\n", clientName, s);
+        if (s.startsWith("/")) {
+            if (s.startsWith("/changename")){
+                String nickName = s.split("\\s", 2)[1];
+                broadcastMsg("SERVER", "client " + clientName + " changed nick for " + nickName);
+                clientName = nickName;
+
+            }
+            return;
+        }
+        broadcastMsg(clientName, s);
+
+    }
+
+    public void broadcastMsg(String clientName, String msg) {
+        String out = String.format("[%s]: %s\n", clientName, msg);
         for (Channel c :
                 channel) {
             c.writeAndFlush(out);
+
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
+        broadcastMsg("SERVER","client " + clientName + " disconnected");
+        channel.remove(ctx.channel());
         ctx.close();
     }
 }

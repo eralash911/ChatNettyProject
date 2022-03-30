@@ -16,10 +16,10 @@ public class Network {
     private SocketChannel channel;
     private static final String HOST = "localhost";
     private static final int PORT = 8080;
-    private Callback onMsgReceivedCallBack;
+
 
     public Network(Callback onMsgReceivedCallBack) {
-        this.onMsgReceivedCallBack = onMsgReceivedCallBack;
+
         Thread t = new Thread(() -> {
             NioEventLoopGroup workerGroup = new NioEventLoopGroup();
             try {
@@ -30,14 +30,8 @@ public class Network {
                             @Override
                             protected void initChannel(SocketChannel socketChannel) throws Exception {
                                 channel = socketChannel;
-                                socketChannel.pipeline().addLast(new StringDecoder(), new StringEncoder(), new SimpleChannelInboundHandler<String>() {
-                                    @Override
-                                    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String s) throws Exception {
-                                        if (onMsgReceivedCallBack != null){
-                                            onMsgReceivedCallBack.callback(s);
-                                        }
-                                    }
-                                });
+                                socketChannel.pipeline().addLast(new StringDecoder(), new StringEncoder(), new ClientHandler(onMsgReceivedCallBack));
+
                             }
                         });
                 ChannelFuture future = b.connect(HOST, PORT).sync();
@@ -56,4 +50,7 @@ public void sendMsg(String str){
         channel.writeAndFlush(str);
 }
 
+    public void close() {
+        channel.close();
+    }
 }

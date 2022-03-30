@@ -1,5 +1,6 @@
 package com.example;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 
 import javafx.fxml.FXML;
@@ -30,5 +31,10 @@ public class Controller implements Initializable  {
         network.sendMsg(msgField.getText());
         msgField.clear();
         msgField.requestFocus();
+    }
+
+    public void btnExit(ActionEvent actionEvent) {
+        network.close();
+        Platform.exit();
     }
 }
